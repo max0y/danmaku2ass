@@ -9,10 +9,12 @@ def safe_chdir(directory):
     try:
         os.chdir(directory)
     except FileNotFoundError:
-        print('FileNotFoundError: please input the right directory!')
+        print('\nFileNotFoundError: please input the right directory!')
         return False
+    except NotADirectoryError:
+        print('\nNotADirectoryError: please input the right directory!')
     except:
-        print('Unexpected error:', sys.exc_info()[0])
+        print('\nUnexpected error:', sys.exc_info()[0])
         raise
     else:
         return True
@@ -29,11 +31,17 @@ fit = ''            # Regular expression to filter comments
 protect = '0'       # Reserve blank on the bottom of the stage
 reduce = False      # Reduce the amount of comments if stage is full
 
-# os.chdir(directory)
 
-directory = input('Please input the directory of .xml files: ')
+if os.name == 'nt':
+    py_name = '\"' + sys.executable + '\" '
+    current_dir = os.path.abspath(sys.argv[0][:-8]) + '\\'
+else:
+    py_name = 'python3 '
+    current_dir = os.path.abspath(sys.argv[0][:-8]) + '/'
+
+directory = input('\nPlease input the directory of .xml files: ')
 while not safe_chdir(directory):
-    directory = input('Please input the directory of .xml files: ')
+    directory = input('\nPlease input the directory of .xml files: ')
 
 size = input(r'Please input the resolution of videos(eg:1920x1080): ')
 size = size.lower()
@@ -43,8 +51,7 @@ files =  [x for x in os.listdir('.') if os.path.isfile(x) and os.path.splitext(x
 
 for file in files:
     # you-get download files, *.cmt.xml --> *.ass
-    # D:\dev\src\danmaku2ass\danmaku2ass.py
-    command = r'python D:\dev\src\danmaku2ass\danmaku2ass.py' \
+    command = py_name + r'"' + current_dir + 'danmaku2ass.py' + r'"' \
               + ' -f ' + form \
               + ' -o ' + r'"' + file[:-8] + '.ass' + r'"' \
               + ' -s ' + size \
@@ -54,14 +61,13 @@ for file in files:
               + ' -dm ' + dm \
               + ' -ds ' + ds \
               + ' -p ' + protect
-    if fit :
+    if fit:
         command = command + ' -fl ' + fit
-    if reduce :
+    if reduce:
         command = command + ' -r'
 
     command = command + r' "' + file + r'"'
-    print(command)
+    print('converting ', file)
     print(os.popen(command).read())
-    # os.system(command)
 
 input('press Enter to exit...')
