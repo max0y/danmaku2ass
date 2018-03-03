@@ -4,6 +4,11 @@
 
 import os
 import sys
+try:
+    import threading
+except ImportError:
+    import dummy_threading as threading
+import time
 
 def safe_chdir(directory):
     try:
@@ -52,7 +57,7 @@ def cmdlist(script_dir, danmaku_dir, size, form = 'autodetect', fn = 'sans-serif
         file_extension = len(file.split('.')[-1]) + 1 + ex_extension           # file extension length
         command = py_name + r'"' + script_dir + 'danmaku2ass.py' + r'"' \
                 + ' -f ' + form \
-                + ' -o ' + r'"' + file[:-file_extension] + '.ass' + r'"' \
+                + ' -o ' + r'"' + danmaku_dir + file[:-file_extension] + '.ass' + r'"' \
                 + ' -s ' + size \
                 + ' -fn ' + r'"' + fn + r'"' \
                 + ' -fs ' + fs \
@@ -64,10 +69,21 @@ def cmdlist(script_dir, danmaku_dir, size, form = 'autodetect', fn = 'sans-serif
             command = command + ' -fl ' + '\"' + fit + '\"'
         if reduce:
             command = command + ' -r'
-        command = command + ' \"' + file + '\"'
+        command = command + ' \"' + danmaku_dir + file + '\"'
         command_list.append(command)
 
     return command_list
+
+
+def excommad(cmd):
+    print('converting ' + cmd.split('\"')[-2] + os.popen(cmd).read())
+
+
+def timer():
+    if sys.platform == 'win32':
+        return time.clock()
+    else:
+        return time.time()
 
 
 def main():
@@ -76,19 +92,31 @@ def main():
     danmaku_dir = input('\nPlease input the directory of your danmaku files: ')
     while not safe_chdir(danmaku_dir):
         danmaku_dir = input('\nPlease input the directory of your danmaku files: ')
+    danmaku_dir = os.getcwd()
 
     size = input('\nPlease input your stage size in pixels(eg:1920x1080): ')
     size = size.lower()
     
+    print('\nstart converting...\n')
+    start = timer()
+
     # you-get downloaded files, *.cmt.xml | *.cmt.json --> *.ass
     # if you want to convert *.xml and *.json to *.ass, set  ex_extension to 0
     command_list = cmdlist(script_dir, danmaku_dir, size, fn ='MS PGothic', dm = '8', ex_extension = 4)
 
+    thread_list = []
     for cmd in command_list:
-        print('converting ', cmd.split('\"')[-2])
-        print(os.popen(cmd).read())
+        thread_list.append(threading.Thread(target = excommad, args = (cmd,)))
+
+    for thread in thread_list:
+        thread.start()
+    for thread in thread_list:
+        thread.join()
+
+    count = timer() - start
+    print("Time used: %.2f seconds" %count)
     
-    input('press Enter to exit...')
+    input('\npress Enter to exit...')
 
 
 main()
