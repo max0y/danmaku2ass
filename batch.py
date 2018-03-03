@@ -76,7 +76,7 @@ def cmdlist(script_dir, danmaku_dir, size, form = 'autodetect', fn = 'sans-serif
 
 
 def excommad(cmd):
-    print('converting ' + cmd.split('\"')[-2] + os.popen(cmd).read())
+    print('done ' + cmd.split('\"')[-2] + os.popen(cmd).read())
 
 
 def timer():
