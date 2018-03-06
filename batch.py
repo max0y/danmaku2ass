@@ -94,7 +94,7 @@ def main():
         danmaku_dir = input('\nPlease input the directory of your danmaku files: ')
     danmaku_dir = os.getcwd()
 
-    size = input('\nPlease input your stage size in pixels(eg:1920x1080): ')
+    size = input('\nPlease input your stage size in pixels(default:1920x1080): ') or '1920x1080'
     size = size.lower()
     
     print('\nstart converting...\n')
