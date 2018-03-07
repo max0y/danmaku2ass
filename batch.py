@@ -10,6 +10,11 @@ except ImportError:
     import dummy_threading as threading
 import time
 
+
+if sys.version_info[0] < 3:
+    input('RuntimeError: at least Python 3.0 is required, press Enter to exit')
+    sys.exit(status = 1)
+
 def safe_chdir(directory):
     try:
         os.chdir(directory)
@@ -41,13 +46,13 @@ def cmdlist(script_dir, danmaku_dir, size, form = 'autodetect', fn = 'sans-serif
 
     # ex_extension: extra extension in the danmaku files [default: 0]
     # (eg: when converting *.cmt.xml to *.ass, the extra extension is .cmt, so ex_extension = 4)
+    
+    py_name = '\"' + sys.executable + '\" '
 
     if os.name == 'nt':
-        py_name = '\"' + sys.executable + '\" '
         script_dir = script_dir + '\\'
         danmaku_dir = danmaku_dir + '\\'
     else:
-        py_name = 'python3 '
         script_dir = script_dir + '/'
         danmaku_dir = danmaku_dir + '/'
     
@@ -75,8 +80,11 @@ def cmdlist(script_dir, danmaku_dir, size, form = 'autodetect', fn = 'sans-serif
     return command_list
 
 
-def excommad(cmd):
-    print('done ' + cmd.split('\"')[-2] + os.popen(cmd).read())
+def runcmd(cmd):
+    if not os.popen(cmd).close():
+        print('done ' + cmd.split('\"')[-2])
+    else:
+        print('failed ' + cmd.split('\"')[-2])
 
 
 def timer():
@@ -92,7 +100,7 @@ def main():
     danmaku_dir = input('\nPlease input the directory of your danmaku files: ')
     while not safe_chdir(danmaku_dir):
         danmaku_dir = input('\nPlease input the directory of your danmaku files: ')
-    danmaku_dir = os.getcwd()
+    danmaku_dir = os.path.abspath('.')
 
     size = input('\nPlease input your stage size in pixels(default:1920x1080): ') or '1920x1080'
     size = size.lower()
@@ -106,17 +114,16 @@ def main():
 
     thread_list = []
     for cmd in command_list:
-        thread_list.append(threading.Thread(target = excommad, args = (cmd,)))
-
+        thread_list.append(threading.Thread(target = runcmd, args = (cmd,)))
     for thread in thread_list:
         thread.start()
     for thread in thread_list:
         thread.join()
-
+    
     count = timer() - start
     print("Time used: %.2f seconds" %count)
     
     input('\npress Enter to exit...')
 
-
-main()
+if __name__ == '__main__':
+    main()
